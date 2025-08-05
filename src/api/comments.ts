@@ -31,7 +31,7 @@ export const updatePost = async (post: {
   body: string
 }) => {
   try {
-    return await client.patch(`/posts/${post.id}`, { post })
+    return await client.patch(`/posts/${post.id}`, post) // ✅
   } catch (err) {
     console.error('updatePost error:', err)
     throw err

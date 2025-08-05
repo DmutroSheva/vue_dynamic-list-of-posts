@@ -4,25 +4,25 @@ import LoginPage from './components/LoginPage.vue'
 import PostsList from './components/PostsList.vue'
 
 import { ref } from 'vue'
-const userData = localStorage.getItem('user')
-const parsedUserData = userData ? JSON.parse(userData) : null
-const isLoggedIn = ref(parsedUserData)
+
+// Храним сразу весь user как реактивный объект
+const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
 
 const handleLogout = () => {
   localStorage.removeItem('user')
-  isLoggedIn.value = null
+  user.value = null
 }
 
-const onLoginSuccess = () => {
-  const userData = localStorage.getItem('user')
-  isLoggedIn.value = userData ? JSON.parse(userData) : null
+const onLoginSuccess = (newUser: any) => {
+  localStorage.setItem('user', JSON.stringify(newUser))
+  user.value = newUser
 }
 </script>
 
 <template>
-  <LoginPage v-if="!isLoggedIn" @loginSuccess="onLoginSuccess" />
+  <LoginPage v-if="!user" @loginSuccess="onLoginSuccess" />
   <template v-else>
-    <AppHeader :userData="parsedUserData" @logout="handleLogout" />
-    <PostsList :userId="parsedUserData.id" />
+    <AppHeader :userData="user" @logout="handleLogout" />
+    <PostsList :userId="user.id" />
   </template>
 </template>

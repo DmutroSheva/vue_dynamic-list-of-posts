@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, defineEmits } from 'vue'
 import { getUserByEmail, addUser } from '../api/users.ts'
 
 const isRegistred = ref(true)
@@ -7,8 +7,6 @@ const email = ref('')
 const name = ref('')
 const error = ref('')
 const nameError = ref('')
-
-import { defineEmits } from 'vue'
 
 const emit = defineEmits(['loginSuccess'])
 
@@ -31,10 +29,11 @@ const handleSubmit = async () => {
 
     try {
       const res = await addUser({ name: name.value, email: userEmail })
-      localStorage.setItem('user', JSON.stringify(res.data[0]))
+      const newUser = res.data // ✅ предполагается, что API возвращает объект
+      localStorage.setItem('user', JSON.stringify(newUser))
       console.log('User registered successfully')
       isRegistred.value = true
-      emit('loginSuccess')
+      emit('loginSuccess', newUser) // ✅ передаём user в App.vue
     } catch (regError) {
       console.error('Registration error:', regError)
       error.value = 'Registration failed. Please try again.'
@@ -51,8 +50,9 @@ const handleSubmit = async () => {
       isRegistred.value = false
       error.value = 'Can not find user with this email'
     } else {
-      localStorage.setItem('user', JSON.stringify(users[0]))
-      emit('loginSuccess')
+      const user = users[0]
+      localStorage.setItem('user', JSON.stringify(user))
+      emit('loginSuccess', user) // ✅
       console.log('User logged in successfully')
     }
   } catch (fetchError) {
@@ -91,9 +91,9 @@ const handleSubmit = async () => {
       </div>
 
       <div v-if="!isRegistred" class="field">
-        <label class="label" for="user-email"> Your Name </label>
+        <label class="label" for="user-name"> Your Name </label>
 
-        <div class="control">
+        <div class="control has-icons-left">
           <input
             type="text"
             id="user-name"
@@ -103,9 +103,8 @@ const handleSubmit = async () => {
             v-model="name"
             required
           />
-
-          <span className="icon is-small is-left">
-            <i className="fas fa-user" />
+          <span class="icon is-small is-left">
+            <i class="fas fa-user"></i>
           </span>
         </div>
 

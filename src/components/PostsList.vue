@@ -5,7 +5,9 @@ import Loader from './Loader.vue'
 import Sidebar from './Sidebar.vue'
 import type { Post } from '../assets/types/types.ts'
 
+// Получаем userId от родителя
 const { userId } = defineProps(['userId'])
+
 const posts = ref<Post[]>([])
 const loading = ref(false)
 const isActiveSidebar = ref(false)
@@ -37,14 +39,13 @@ const fetchPosts = async () => {
 }
 
 const openPost = (post: Post) => {
-  if (!selectedPost.value || selectedPost.value.id !== post.id) {
+  if (selectedPost.value?.id === post.id) {
+    // При повторном клике на тот же пост — закрываем
+    closeSidebar()
+    selectedPost.value = null
+  } else {
     selectedPost.value = post
     openSidebar()
-  } else {
-    closeSidebar()
-    setTimeout(() => {
-      selectedPost.value = null
-    }, 1000)
   }
 }
 
@@ -53,7 +54,7 @@ const addPost = (newPost: Post) => {
 }
 
 const updatePost = (newPost: Post) => {
-  posts.value.map((post) => (post.id === newPost.id ? newPost : post))
+  posts.value = posts.value.map((post) => (post.id === newPost.id ? newPost : post))
 }
 
 const deletePost = (postId: number) => {
@@ -69,6 +70,7 @@ onBeforeMount(fetchPosts)
     :class="{ 'is-align-items-center mt-2 is-flex is-justify-content-center': loading }"
   >
     <Loader v-if="loading" />
+
     <div v-else class="tile is-child box is-success">
       <div class="block">
         <div class="block is-flex is-justify-content-space-between">
@@ -78,7 +80,10 @@ onBeforeMount(fetchPosts)
           </button>
         </div>
 
-        <table v-if="posts.length" class="table is-fullwidth is-striped is-hoverable is-narrow">
+        <table
+          v-if="posts && posts.length > 0"
+          class="table is-fullwidth is-striped is-hoverable is-narrow"
+        >
           <thead>
             <tr class="has-background-link-light">
               <th>ID</th>
@@ -87,7 +92,7 @@ onBeforeMount(fetchPosts)
             </tr>
           </thead>
           <tbody>
-            <tr v-for="post of posts" :key="post.id">
+            <tr v-for="post in posts" :key="post.id">
               <td>{{ post.id }}</td>
               <td>{{ post.title }}</td>
               <td class="has-text-right is-vcentered">
@@ -102,9 +107,11 @@ onBeforeMount(fetchPosts)
         <h1 v-else class="has-text-centered is-size-5">No posts yet</h1>
       </div>
     </div>
+
     <Sidebar
       :isActiveSidebar="isActiveSidebar"
       :selectedPost="selectedPost"
+      :userId="userId"
       @addPost="addPost"
       @deletePost="deletePost"
       @closeSidebar="closeSidebar"
@@ -113,7 +120,7 @@ onBeforeMount(fetchPosts)
   </div>
 </template>
 
-<style>
+<style scoped>
 .flex {
   display: flex;
   gap: 24px;
